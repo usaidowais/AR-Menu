@@ -1,0 +1,8 @@
+{
+  "name": "WebAR Menu SaaS Platform",
+  "description": "A multi-tenant SaaS platform for restaurants to create augmented reality menus. Features include a Super Admin dashboard, Client Portal for dish/menu management, and a public-facing mobile WebAR menu using Google Model Viewer.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
