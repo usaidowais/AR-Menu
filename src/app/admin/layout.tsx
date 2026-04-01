@@ -17,25 +17,43 @@ export default function AdminLayout({
 
     // Auth Check
     React.useEffect(() => {
+        let mounted = true;
+
         const checkAuth = async () => {
             try {
-                const { data: { user }, error } = await supabase.auth.getUser();
-                if (error || !user) {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (!mounted) return;
+
+                if (error || !session) {
                     router.push('/');
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                router.push('/');
+                if (mounted) router.push('/');
             } finally {
-                setIsLoading(false);
+                if (mounted) setIsLoading(false);
             }
         };
+
         checkAuth();
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (!session && mounted) {
+                router.push('/');
+            }
+        });
+
+        return () => {
+            mounted = false;
+            subscription.unsubscribe();
+        };
     }, [router]);
 
     // Mock Logout
     const handleLogout = async () => {
         await supabase.auth.signOut();
+        // Clear middleware auth cookie
+        document.cookie = 'supabase-auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         router.push('/');
     };
 

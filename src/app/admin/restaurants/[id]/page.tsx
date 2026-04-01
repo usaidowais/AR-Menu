@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/Button';
 import { useParams, useRouter } from 'next/navigation';
@@ -16,9 +16,25 @@ export default function RestaurantDetailDashboard() {
     const id = params.id as string;
     const [restaurantName, setRestaurantName] = React.useState<string>('Loading...');
     const [restaurant, setRestaurant] = React.useState<any>(null);
-    const [restaurantSlug, setRestaurantSlug] = React.useState<string>('');
-    const [dishes, setDishes] = React.useState<Dish[]>([]);
-    const [preset, setPreset] = React.useState<any>(DEFAULT_THEME);
+    const [restaurantSlug, setRestaurantSlug] = useState<string>('');
+    const [dishes, setDishes] = useState<Dish[]>([]);
+    const [preset, setPreset] = useState<any>(DEFAULT_THEME);
+    const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+
+    const downloadQR = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Failed to download QR code', error);
+        }
+    };
 
     useEffect(() => {
         const fetchRestaurant = async () => {
@@ -112,6 +128,10 @@ export default function RestaurantDetailDashboard() {
                     <p className="text-muted-foreground mt-1">Tenant ID: {id} • <span className="text-green-600 font-medium">Active</span></p>
                 </div>
                 <div className="flex gap-3">
+                    <Button variant="outline" className="gap-2" onClick={() => setIsQrModalOpen(true)}>
+                        <span className="material-icons-round text-sm">qr_code</span>
+                        Download Menu QR
+                    </Button>
                     <Button variant="outline" className="gap-2" onClick={() => router.push(`/admin/restaurants/${id}/menu`)}>
                         <span className="material-icons-round text-sm">restaurant_menu</span>
                         Manage Menu Items
@@ -203,6 +223,45 @@ export default function RestaurantDetailDashboard() {
                 </div>
 
             </div>
+
+            {/* QR Modal */}
+            {isQrModalOpen && restaurant && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-background rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-foreground">Menu QR Code</h3>
+                            <button onClick={() => setIsQrModalOpen(false)} className="text-muted-foreground hover:text-foreground">
+                                <span className="material-icons-round">close</span>
+                            </button>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-inner mb-6 flex justify-center items-center h-64">
+                            <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.slug || restaurant.id}` : '')}`}
+                                alt={`${restaurant.name} QR Code`}
+                                className="w-full h-full object-contain"
+                            />
+                        </div>
+
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Scan this code to view the full digital menu for {restaurant.name}.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <Button
+                                className="w-full bg-[#001f3f] text-white gap-2 flex items-center justify-center"
+                                onClick={() => downloadQR(
+                                    `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.slug || restaurant.id}` : '')}`,
+                                    `${restaurant.name || 'Restaurant'}-Menu-QR.png`
+                                )}
+                            >
+                                <span className="material-icons-round text-sm">download</span>
+                                Download High-Quality QR
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

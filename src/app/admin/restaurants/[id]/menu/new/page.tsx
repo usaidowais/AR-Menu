@@ -23,6 +23,7 @@ export default function AddDishPage() {
     // AR Model State
     const [arModelFile, setArModelFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [arUploadWarning, setArUploadWarning] = useState<string | null>(null);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -88,19 +89,34 @@ export default function AddDishPage() {
 
     const handleArModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setArModelFile(file);
-            setUploadProgress(0);
-            const interval = setInterval(() => {
-                setUploadProgress(prev => {
-                    if (prev >= 100) {
-                        clearInterval(interval);
-                        return 100;
-                    }
-                    return prev + 10;
-                });
-            }, 200);
+        if (!file) return;
+
+        // Validation: Only .glb
+        if (!file.name.toLowerCase().endsWith('.glb')) {
+            setUploadError('Only .glb files are supported for AR models.');
+            e.target.value = ''; // Clear input
+            return;
         }
+
+        // Soft warning for large models (> 15MB)
+        if (file.size > 15 * 1024 * 1024) {
+            setArUploadWarning('Warning: Large models may take longer for customers to load on mobile data.');
+        } else {
+            setArUploadWarning(null);
+        }
+
+        setUploadError(null);
+        setArModelFile(file);
+        setUploadProgress(0);
+        const interval = setInterval(() => {
+            setUploadProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    return 100;
+                }
+                return prev + 10;
+            });
+        }, 200);
     };
 
     const handleSave = async () => {
@@ -185,6 +201,14 @@ export default function AddDishPage() {
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2">
                     <span className="material-icons-round text-red-500">error</span>
                     <span className="text-sm font-medium">{uploadError}</span>
+                </div>
+            )}
+
+            {/* Warning Message */}
+            {arUploadWarning && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center gap-2 mb-4">
+                    <span className="material-icons-round text-amber-500">warning</span>
+                    <span className="text-sm font-medium">{arUploadWarning}</span>
                 </div>
             )}
 
@@ -339,7 +363,7 @@ export default function AddDishPage() {
                             type="file"
                             ref={arInputRef}
                             className="hidden"
-                            accept=".glb,.usdz"
+                            accept=".glb"
                             onChange={handleArModelChange}
                         />
 
@@ -349,7 +373,7 @@ export default function AddDishPage() {
                                 onClick={() => arInputRef.current?.click()}
                             >
                                 <span className="material-icons-round text-3xl text-muted-foreground mb-2">cloud_upload</span>
-                                <span className="text-sm font-medium text-foreground">Upload .GLB or .USDZ</span>
+                                <span className="text-sm font-medium text-foreground">Upload .GLB</span>
                             </div>
                         ) : (
                             <div className="bg-secondary/30 border border-border rounded-xl p-4">
@@ -385,7 +409,7 @@ export default function AddDishPage() {
                                     </div>
                                 )}
 
-                                <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">Supports .glb and .usdz files up to 20MB.</p>
+                                <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">Supports .glb files up to 15MB (recommended).</p>
                             </div>
                         )}
                     </div>

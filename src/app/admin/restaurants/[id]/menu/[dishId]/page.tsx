@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useRouter, useParams } from 'next/navigation';
 import { supabaseService, supabase } from '@/lib/services/supabaseService';
-import { Restaurant } from '@/lib/types';
+import { Restaurant, Dish } from '@/lib/types';
 
 export default function EditDishPage() {
     const router = useRouter();
@@ -21,10 +21,44 @@ export default function EditDishPage() {
     // Restaurant State
     const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
-    // AR Model State
     const [arModelFile, setArModelFile] = useState<File | null>(null);
     const [currentArUrl, setCurrentArUrl] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
+    const [arUploadWarning, setArUploadWarning] = useState<string | null>(null);
+
+    // Scaling State
+    const modelViewerRef = useRef<any>(null);
+    const [currentScale, setCurrentScale] = useState<number>(1.0);
+    const [baseDim, setBaseDim] = useState({ x: 0, y: 0, z: 0 });
+    const [autoScaleFactor, setAutoScaleFactor] = useState<number>(1.0);
+    const [initialArScale, setInitialArScale] = useState<number | null>(null);
+
+    useEffect(() => {
+        const viewer = modelViewerRef.current;
+        if (!viewer) return;
+
+        const handleLoad = () => {
+            const dims = viewer.getDimensions();
+            setBaseDim({ x: dims.x, y: dims.y, z: dims.z });
+
+            // Auto-Normalization
+            const maxDim = Math.max(dims.x, dims.y, dims.z);
+            if (maxDim > 0) {
+                const calculatedAutoScale = 0.2 / maxDim;
+                setAutoScaleFactor(calculatedAutoScale);
+                
+                // Back-calculate relative UI slider position if dish already has a saved scale
+                if (initialArScale) {
+                    setCurrentScale(initialArScale / calculatedAutoScale);
+                } else {
+                    setCurrentScale(1.0);
+                }
+            }
+        };
+
+        viewer.addEventListener('load', handleLoad);
+        return () => viewer.removeEventListener('load', handleLoad);
+    }, [arModelFile, currentArUrl, initialArScale]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -75,16 +109,11 @@ export default function EditDishPage() {
                             price: dish.price.toString(),
                             category: dish.category,
                             description: dish.description || '',
-                            availability: 'Available' // Dish type might not have availability field yet? Let's check type.
-                            // If type doesn't have availability, we ignore it or add it to types?
-                            // Looking at AddDishPage, it has availability state but does it save it?
-                            // AddDishPage payload: name, description, price, image_url, category, glb_url.
-                            // It does NOT save availability. So it's UI only in AddPage? 
-                            // Re-checking AddDishPage... yes, it sets it but doesn't pass it to addDish.
-                            // So we will keep it UI only or ignore.
+                            availability: 'Available'
                         });
                         setImagePreview(dish.image_url);
                         setCurrentArUrl(dish.glb_url || null);
+                        if (dish.ar_scale) setInitialArScale(dish.ar_scale);
                     }
                 } else {
                     setUploadError('Restaurant not found.');
@@ -123,20 +152,35 @@ export default function EditDishPage() {
 
     const handleArModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setArModelFile(file);
-            setUploadProgress(0);
-            // Fake progress for UX
-            const interval = setInterval(() => {
-                setUploadProgress(prev => {
-                    if (prev >= 100) {
-                        clearInterval(interval);
-                        return 100;
-                    }
-                    return prev + 10;
-                });
-            }, 200);
+        if (!file) return;
+
+        // Validation: Only .glb
+        if (!file.name.toLowerCase().endsWith('.glb')) {
+            setUploadError('Only .glb files are supported for AR models.');
+            e.target.value = ''; // Clear input
+            return;
         }
+
+        // Soft warning for large models (> 15MB)
+        if (file.size > 15 * 1024 * 1024) {
+            setArUploadWarning('Warning: Large models may take longer for customers to load on mobile data.');
+        } else {
+            setArUploadWarning(null);
+        }
+
+        setUploadError(null);
+        setArModelFile(file);
+        setUploadProgress(0);
+        // Fake progress for UX
+        const interval = setInterval(() => {
+            setUploadProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    return 100;
+                }
+                return prev + 10;
+            });
+        }, 200);
     };
 
     const handleSave = async () => {
@@ -163,13 +207,16 @@ export default function EditDishPage() {
             }
 
             // 3. Update Dish
+            const trueScale = currentScale * autoScaleFactor;
+            
             await supabaseService.updateDish(dishIdParam, {
                 name: formData.name,
                 description: formData.description,
                 price: parseFloat(formData.price),
                 image_url: uploadedImageUrl || undefined,
                 category: formData.category,
-                glb_url: finalArUrl || undefined
+                glb_url: finalArUrl || undefined,
+                ar_scale: trueScale
             });
 
             // Brief delay for UX then redirect
@@ -208,9 +255,17 @@ export default function EditDishPage() {
 
             {/* Error Message */}
             {uploadError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 mb-4">
                     <span className="material-icons-round text-red-500">error</span>
                     <span className="text-sm font-medium">{uploadError}</span>
+                </div>
+            )}
+
+            {/* Warning Message */}
+            {arUploadWarning && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center gap-2 mb-4">
+                    <span className="material-icons-round text-amber-500">warning</span>
+                    <span className="text-sm font-medium">{arUploadWarning}</span>
                 </div>
             )}
 
@@ -415,6 +470,95 @@ export default function EditDishPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Size & Scaling Tool - Moved OUTSIDE the right column so it spans horizontally */}
+            {(arModelFile || currentArUrl) && (
+                <div className="glass-card p-6 rounded-2xl border border-border/50 w-full mb-8">
+                    <div className="flex justify-between items-center mb-6">
+                        <h3 className="font-bold text-xl text-foreground flex items-center gap-2">
+                            <span className="material-icons-round text-primary">straighten</span>
+                            AR Live Dimension Scaling
+                        </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full items-start">
+                        {/* Left Column: 3D Preview */}
+                        <div className="w-full min-h-[400px] lg:min-h-[500px] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden relative flex items-center justify-center">
+                            {/* @ts-ignore */}
+                            <model-viewer
+                                ref={modelViewerRef}
+                                src={arModelFile ? URL.createObjectURL(arModelFile) : (currentArUrl || '')}
+                                bounds="tight"
+                                disable-zoom
+                                camera-controls
+                                auto-rotate
+                                className="w-full h-full absolute inset-0"
+                                style={{ 
+                                    width: '100%', 
+                                    height: '100%',
+                                    transform: `scale(${currentScale * 0.75})`,
+                                    transformOrigin: 'center',
+                                    transition: 'transform 0.1s ease-out'
+                                }}
+                            />
+                        </div>
+
+                        {/* Right Column: Controls */}
+                        <div className="w-full flex flex-col gap-6">
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="text-sm font-bold text-slate-900">Scale Factor</label>
+                                    <span className="text-sm font-mono bg-slate-100 px-2 py-0.5 rounded text-slate-900">{currentScale.toFixed(2)}x</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0.1"
+                                    max="3.0"
+                                    step="0.05"
+                                    value={currentScale}
+                                    onChange={(e) => setCurrentScale(parseFloat(e.target.value))}
+                                    className="w-full accent-slate-900"
+                                />
+                                <p className="text-xs text-slate-500 mt-2">
+                                    Measure your physical dish. Drag the slider until one of these numbers matches your real-world measurement.
+                                </p>
+                            </div>
+
+                            <div className="bg-slate-50 p-6 rounded-xl border border-slate-200">
+                                <h4 className="text-sm font-bold text-slate-900 mb-4 text-center">Estimated Real-World Size</h4>
+                                <div className="flex flex-col">
+                                    <div className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+                                        <span className="text-slate-500 flex items-center gap-2">
+                                            <span className="material-icons-round text-xs">open_in_full</span> Width (Side to Side)
+                                        </span>
+                                        <span className="whitespace-nowrap font-medium text-slate-900">{(baseDim.x * currentScale * autoScaleFactor * 100).toFixed(1)} cm</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+                                        <span className="text-slate-500 flex items-center gap-2">
+                                            <span className="material-icons-round text-xs">height</span> Height (Bottom to Top)
+                                        </span>
+                                        <span className="whitespace-nowrap font-medium text-slate-900">{(baseDim.y * currentScale * autoScaleFactor * 100).toFixed(1)} cm</span>
+                                    </div>
+                                    <div className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0">
+                                        <span className="text-slate-500 flex items-center gap-2">
+                                            <span className="material-icons-round text-xs">settings_ethernet</span> Length (Front to Back)
+                                        </span>
+                                        <span className="whitespace-nowrap font-medium text-slate-900">{(baseDim.z * currentScale * autoScaleFactor * 100).toFixed(1)} cm</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Button 
+                                className="w-full py-3 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors" 
+                                onClick={handleSave}
+                            >
+                                <span className="material-icons-round text-sm mr-2">save</span>
+                                Save Scale
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Footer Actions */}
             <div className="flex justify-end gap-4 pt-4 border-t border-border">

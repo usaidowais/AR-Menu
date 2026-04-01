@@ -26,11 +26,11 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Condition 2: /login with active session
-  if (pathname === '/login') {
+  // Condition 2: /login or / with active session
+  if (pathname === '/login' || pathname === '/') {
     if (hasSession) {
       const adminUrl = request.nextUrl.clone();
-      adminUrl.pathname = '/admin';
+      adminUrl.pathname = '/admin/restaurants';
       return NextResponse.redirect(adminUrl);
     }
   }

@@ -8,6 +8,7 @@ interface ARExperienceProps {
     dishName: string;
     dishPrice: string | number;
     secondaryColor?: string;
+    arScale?: number;
     onClose: () => void;
 }
 
@@ -18,6 +19,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
     dishName,
     dishPrice,
     secondaryColor = '#FFD700',
+    arScale = 1.0,
     onClose
 }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -131,11 +133,13 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 src={modelUrl}
                 ios-src={iosSrc || modelUrl}
                 alt={alt}
+                scale={`${arScale} ${arScale} ${arScale}`}
                 ar
-                ar-modes="scene-viewer webxr quick-look"
+                ar-modes="webxr scene-viewer quick-look"
                 camera-controls
                 auto-rotate
                 shadow-intensity="1"
+                exposure="1"
                 ar-scale="fixed"
                 ar-placement="floor"
                 touch-action="pan-y"
@@ -145,6 +149,12 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 reveal="auto"
                 environment-image="neutral"
             >
+                {/* Native Loading Progress Bar Slot */}
+                <div slot="progress-bar" className="absolute inset-0 z-[65] flex flex-col items-center justify-center bg-black">
+                    <div className="w-10 h-10 border-3 border-neutral-700 border-t-white rounded-full animate-spin mb-4"></div>
+                    <span className="text-white/70 text-sm font-medium tracking-wide">Loading 3D Model...</span>
+                </div>
+
                 {/* AR Prompt Slot */}
                 <div slot="ar-prompt" className="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 pointer-events-none w-full px-6">
                     <div className="bg-white/10 backdrop-blur-xl border border-white/20 px-6 py-4 rounded-2xl flex items-center gap-4 shadow-2xl">

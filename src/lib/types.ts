@@ -45,6 +45,7 @@ export interface Dish {
   image_url: string;
   glb_url?: string; // For Android/Web
   usdz_url?: string; // For iOS AR Quick Look
+  ar_scale?: number; // Scaling factor for AR models
   category: string;
 }
 

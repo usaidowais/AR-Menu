@@ -207,6 +207,13 @@ export function UnifiedMobileSimulator({ mode, theme, data, className }: Unified
                     ))}
                 </div>
 
+                {(mode === 'preview' ? dishes : finalDishes).length === 0 && (
+                    <div className="flex flex-col items-center justify-center pt-8 pb-20 opacity-50">
+                        <span className="material-icons-round text-4xl mb-2">restaurant_menu</span>
+                        <p className="text-sm font-medium">No menu items found</p>
+                    </div>
+                )}
+
             </div>
 
             {/* --- REAL AR EXPERIENCE --- */}

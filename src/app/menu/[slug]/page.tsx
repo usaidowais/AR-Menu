@@ -31,7 +31,23 @@ export default function PublicMenuPage() {
         }
     }, [slug]);
 
-    if (loading || !data) return <div className="flex h-screen items-center justify-center text-primary bg-background"><span className="material-icons-round animate-spin text-4xl">sync</span></div>;
+    if (loading) {
+        return (
+            <div className="flex h-screen items-center justify-center text-primary bg-background">
+                <span className="material-icons-round animate-spin text-4xl">sync</span>
+            </div>
+        );
+    }
+
+    if (!data) {
+        return (
+            <div className="flex h-screen flex-col items-center justify-center bg-background text-foreground">
+                <span className="material-icons-round text-6xl text-muted-foreground mb-4 opacity-50">search_off</span>
+                <h2 className="text-2xl font-bold mb-2">Menu Not Found</h2>
+                <p className="text-muted-foreground">This restaurant menu doesn't exist or is currently unavailable.</p>
+            </div>
+        );
+    }
 
     // Use theme settings purely to compute active theme
     const { restaurant, dishes } = data;
@@ -222,6 +238,7 @@ export default function PublicMenuPage() {
                     dishName={arDish.name}
                     dishPrice={`PKR ${arDish.price}`}
                     secondaryColor={effectivePreset.secondaryColor}
+                    arScale={arDish.ar_scale || 1.0}
                     onClose={() => setArDish(null)}
                 />
             )}

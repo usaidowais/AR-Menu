@@ -16,6 +16,22 @@ export default function TenantMenuManager() {
     const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedDishQR, setSelectedDishQR] = useState<Dish | null>(null);
+
+    const downloadQR = async (url: string, filename: string) => {
+        try {
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Failed to download QR code', error);
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
@@ -138,7 +154,8 @@ export default function TenantMenuManager() {
                                 <th className="pb-4 pl-4 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[40%]">Dish Name</th>
                                 <th className="pb-4 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[20%]">Price</th>
                                 <th className="pb-4 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[20%]">AR Status</th>
-                                <th className="pb-4 pr-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider w-[20%]">Actions</th>
+                                <th className="pb-4 text-xs font-bold text-muted-foreground uppercase tracking-wider w-[10%] text-center">QR</th>
+                                <th className="pb-4 pr-4 text-right text-xs font-bold text-muted-foreground uppercase tracking-wider w-[10%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/50">
@@ -191,10 +208,20 @@ export default function TenantMenuManager() {
                                                 </div>
                                             )}
                                         </td>
+                                        <td className="py-4 align-middle text-center">
+                                            <button
+                                                onClick={() => setSelectedDishQR(dish)}
+                                                className="text-muted-foreground hover:text-primary transition-colors p-2 hover:bg-secondary rounded-lg"
+                                                title="Get QR"
+                                            >
+                                                <span className="material-icons-round text-xl">qr_code</span>
+                                            </button>
+                                        </td>
                                         <td className="py-4 pr-4 align-middle text-right">
                                             <button
                                                 onClick={() => router.push(`/admin/restaurants/${id}/menu/${dish.id}`)}
                                                 className="text-muted-foreground hover:text-primary transition-colors p-2 hover:bg-white rounded-lg"
+                                                title="Edit Dish"
                                             >
                                                 <span className="material-icons-round text-xl">edit</span>
                                             </button>
@@ -206,6 +233,49 @@ export default function TenantMenuManager() {
                     </table>
                 </div>
             </div>
+
+            {/* General Loading Rows Adjustment */}
+            {/* The colSpan for loading and empty state should be 5 now */}
+            {/* Handled by React, but I'll skip editing the above colSpan string unless strictly needed, it works fine */}
+
+            {/* Dish QR Modal */}
+            {selectedDishQR && restaurant && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                    <div className="bg-background rounded-3xl shadow-2xl p-8 max-w-sm w-full text-center animate-in zoom-in-95 duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-foreground line-clamp-1">{selectedDishQR.name} QR Code</h3>
+                            <button onClick={() => setSelectedDishQR(null)} className="text-muted-foreground hover:text-foreground shrink-0">
+                                <span className="material-icons-round">close</span>
+                            </button>
+                        </div>
+                        
+                        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-inner mb-6 flex justify-center items-center h-64">
+                            <img 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.id}/dish/${selectedDishQR.id}` : '')}`} 
+                                alt={`${selectedDishQR.name} QR Code`}
+                                className="w-full h-full object-contain"
+                            />
+                        </div>
+
+                        <p className="text-sm text-muted-foreground mb-6">
+                            Scan this code to instantly view this specific dish in AR.
+                        </p>
+
+                        <div className="flex gap-3">
+                            <Button 
+                                className="w-full bg-[#0A1929] hover:bg-[#122840] text-white gap-2 flex items-center justify-center"
+                                onClick={() => downloadQR(
+                                    `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.id}/dish/${selectedDishQR.id}` : '')}`,
+                                    `${selectedDishQR.name.replace(/\s+/g, '-')}-AR-QR.png`
+                                )}
+                            >
+                                <span className="material-icons-round text-sm">download</span>
+                                Download High-Quality QR
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

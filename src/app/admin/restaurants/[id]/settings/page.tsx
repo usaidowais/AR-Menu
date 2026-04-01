@@ -7,7 +7,7 @@ import { supabaseService } from '@/lib/services/supabaseService';
 import { Restaurant, Dish } from '@/lib/types';
 import { UnifiedMobileSimulator } from '@/components/mobile-menu/UnifiedMobileSimulator';
 import { computeActiveTheme } from '@/lib/utils/themeManager';
-
+import { QRCodeCanvas } from 'qrcode.react';
 
 export default function TenantSettingsPage() {
     const router = useRouter();
@@ -119,24 +119,21 @@ export default function TenantSettingsPage() {
         }
     };
 
-    const handleDownloadQR = async () => {
-        if (!qrPreview) {
-            alert('No QR code to download.');
+    const handleDownloadQR = () => {
+        const canvas = document.getElementById('restaurant-qr-code') as HTMLCanvasElement;
+        if (!canvas) {
+            alert('QR code not found.');
             return;
         }
 
         try {
-            const response = await fetch(qrPreview);
-            const blob = await response.blob();
-            const blobUrl = window.URL.createObjectURL(blob);
-
+            const pngUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
             const link = document.createElement('a');
-            link.href = blobUrl;
-            link.download = `${restaurant?.name || 'restaurant'}-qr-code.png`;
+            link.href = pngUrl;
+            link.download = `${restaurant?.name || 'restaurant'}-QR-Code.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            window.URL.revokeObjectURL(blobUrl);
         } catch (error) {
             console.error('Download failed:', error);
             alert('Failed to download QR code. Try right-clicking the image and "Save Image As".');
@@ -484,8 +481,15 @@ export default function TenantSettingsPage() {
                     {/* Distribution Card */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-border/50 text-center">
                         <div className="bg-white border border-gray-100 rounded-2xl w-48 h-48 mx-auto mb-6 flex items-center justify-center shadow-inner overflow-hidden">
-                            {qrPreview ? (
-                                <img src={qrPreview} alt="QR Code" className="w-full h-full object-cover p-2" />
+                            {typeof window !== 'undefined' && restaurant ? (
+                                <QRCodeCanvas
+                                    id="restaurant-qr-code"
+                                    value={`${window.location.origin}/menu/${restaurant.slug || restaurant.id}`}
+                                    size={512}
+                                    fgColor="#000000"
+                                    bgColor="#FFFFFF"
+                                    style={{ width: '100%', height: 'auto', maxWidth: '192px' }}
+                                />
                             ) : (
                                 <span className="material-icons-round text-8xl text-[#001f3f]">qr_code_2</span>
                             )}
@@ -499,15 +503,9 @@ export default function TenantSettingsPage() {
                             className="w-full bg-[#001f3f] hover:bg-[#001f3f]/90 text-white rounded-xl py-6 text-base font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-900/10 transition-all mb-4"
                             onClick={handleDownloadQR}
                         >
-                            <span className="material-icons-round">print</span>
-                            Print from Download
+                            <span className="material-icons-round">download</span>
+                            Download High-Quality QR
                         </Button>
-
-                        <label className="w-full border-2 border-dashed border-gray-300 hover:border-[#001f3f] hover:bg-blue-50/50 text-gray-600 hover:text-[#001f3f] rounded-xl py-4 text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer">
-                            <span className="material-icons-round">upload</span>
-                            Upload Custom QR
-                            <input type="file" className="hidden" accept="image/*" onChange={handleQrUpload} />
-                        </label>
                     </div>
                 </div>
             </div>
