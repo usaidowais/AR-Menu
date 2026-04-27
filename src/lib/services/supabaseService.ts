@@ -231,12 +231,31 @@ export const supabaseService = {
 
 
     // --- Public Menu Methods ---
-    getMenuBySlug: async (slug: string) => {
-        const { data: restaurant, error: rError } = await supabase
+    getMenuBySlug: async (idOrSlug: string) => {
+        let restaurant;
+        let rError;
+
+        // 1. Try to fetch by exact UUID first (matches QR code fallback)
+        const { data: byId, error: idError } = await supabase
             .from('restaurants')
             .select('*')
-            .eq('slug', slug)
+            .eq('id', idOrSlug)
             .single();
+
+        restaurant = byId;
+        rError = idError;
+
+        // 2. If it fails (either not found, or idOrSlug is not a UUID and throws an error), try fetching by slug
+        if (idError || !restaurant) {
+            const { data: bySlug, error: slugError } = await supabase
+                .from('restaurants')
+                .select('*')
+                .eq('slug', idOrSlug)
+                .single();
+            
+            restaurant = bySlug;
+            rError = slugError;
+        }
 
         if (rError || !restaurant) throw new Error('Restaurant not found');
 
