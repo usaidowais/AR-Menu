@@ -92,11 +92,6 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
 
     return (
         <div className="absolute inset-0 z-50 bg-black">
-            {/* Debug Source Label */}
-            <div className="absolute top-4 left-4 z-[60] bg-black/50 text-white text-[10px] px-2 py-1 rounded max-w-[250px] break-all">
-                SRC: {modelUrl}
-            </div>
-
             {/* Close Button */}
             <button
                 onClick={onClose}
@@ -162,6 +157,14 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                         </div>
                     </div>
                 </div>
+
+                {/* Custom AR Button (Strictly Required for iOS/Android Native AR Launch) */}
+                <button 
+                    slot="ar-button" 
+                    className="absolute bottom-32 left-1/2 transform -translate-x-1/2 bg-white text-black px-6 py-3 rounded-full font-bold shadow-lg z-[80]"
+                >
+                    Place in your space
+                </button>
                 {/* @ts-ignore */}
             </model-viewer>
 

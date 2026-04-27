@@ -251,7 +251,7 @@ export default function TenantMenuManager() {
                         
                         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-inner mb-6 flex justify-center items-center h-64">
                             <img 
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.id}/dish/${selectedDishQR.id}` : '')}`} 
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.slug || restaurant.id}?dish=${selectedDishQR.id}` : '')}`} 
                                 alt={`${selectedDishQR.name} QR Code`}
                                 className="w-full h-full object-contain"
                             />
@@ -265,7 +265,7 @@ export default function TenantMenuManager() {
                             <Button 
                                 className="w-full bg-[#0A1929] hover:bg-[#122840] text-white gap-2 flex items-center justify-center"
                                 onClick={() => downloadQR(
-                                    `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.id}/dish/${selectedDishQR.id}` : '')}`,
+                                    `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodeURIComponent(typeof window !== 'undefined' ? `${window.location.origin}/menu/${restaurant.slug || restaurant.id}?dish=${selectedDishQR.id}` : '')}`,
                                     `${selectedDishQR.name.replace(/\s+/g, '-')}-AR-QR.png`
                                 )}
                             >

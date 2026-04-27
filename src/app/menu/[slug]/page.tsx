@@ -5,7 +5,7 @@ import { Restaurant, Dish, UIPreset } from '@/lib/types';
 import { supabaseService } from '@/lib/services/supabaseService';
 import { ARModelViewer } from '@/components/ARModelViewer';
 import { ARExperience } from '@/components/ar/ARExperience';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { computeActiveTheme } from '@/lib/utils/themeManager';
@@ -21,7 +21,18 @@ export default function PublicMenuPage() {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState<{ restaurant: Restaurant, dishes: Dish[], preset: UIPreset } | null>(null);
 
+    const searchParams = useSearchParams();
+    const dishParam = searchParams.get('dish');
 
+    useEffect(() => {
+        // Auto-launch AR view if a dish query param is present
+        if (data && dishParam && !arDish) {
+            const targetDish = data.dishes.find(d => d.id === dishParam);
+            if (targetDish) {
+                setArDish(targetDish);
+            }
+        }
+    }, [data, dishParam]);
     useEffect(() => {
         if (slug) {
             supabaseService.getMenuBySlug(slug).then(res => {
