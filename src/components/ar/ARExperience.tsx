@@ -149,11 +149,6 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 reveal="auto"
                 environment-image="neutral"
             >
-                {/* Native Loading Progress Bar Slot */}
-                <div slot="progress-bar" className="absolute inset-0 z-[65] flex flex-col items-center justify-center bg-black">
-                    <div className="w-10 h-10 border-3 border-neutral-700 border-t-white rounded-full animate-spin mb-4"></div>
-                    <span className="text-white/70 text-sm font-medium tracking-wide">Loading 3D Model...</span>
-                </div>
 
                 {/* AR Prompt Slot */}
                 <div slot="ar-prompt" className="absolute top-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 pointer-events-none w-full px-6">

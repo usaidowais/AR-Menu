@@ -1,6 +1,5 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Loader2 } from 'lucide-react'; // Assuming we might add lucide-react later, but for now we'll stick to material icons or simple text, but let's use standard className props.
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
