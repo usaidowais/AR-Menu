@@ -25,6 +25,11 @@ export default function AddDishPage() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [arUploadWarning, setArUploadWarning] = useState<string | null>(null);
 
+    // USDZ Model State
+    const [usdzModelFile, setUsdzModelFile] = useState<File | null>(null);
+    const [usdzUploadProgress, setUsdzUploadProgress] = useState(0);
+    const [usdzUploadWarning, setUsdzUploadWarning] = useState<string | null>(null);
+
     // Form State
     const [formData, setFormData] = useState({
         name: '',
@@ -39,6 +44,7 @@ export default function AddDishPage() {
     // Refs
     const imageInputRef = useRef<HTMLInputElement>(null);
     const arInputRef = useRef<HTMLInputElement>(null);
+    const usdzInputRef = useRef<HTMLInputElement>(null);
 
     // Fetch Restaurant Details to get Real UUID
     useEffect(() => {
@@ -119,6 +125,38 @@ export default function AddDishPage() {
         }, 200);
     };
 
+    const handleUsdzModelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validation: Only .usdz
+        if (!file.name.toLowerCase().endsWith('.usdz')) {
+            setUploadError('Only .usdz files are supported for iOS AR models.');
+            e.target.value = ''; // Clear input
+            return;
+        }
+
+        // Soft warning for large models (> 15MB)
+        if (file.size > 15 * 1024 * 1024) {
+            setUsdzUploadWarning('Warning: Large models may take longer for customers to load on mobile data.');
+        } else {
+            setUsdzUploadWarning(null);
+        }
+
+        setUploadError(null);
+        setUsdzModelFile(file);
+        setUsdzUploadProgress(0);
+        const interval = setInterval(() => {
+            setUsdzUploadProgress(prev => {
+                if (prev >= 100) {
+                    clearInterval(interval);
+                    return 100;
+                }
+                return prev + 10;
+            });
+        }, 200);
+    };
+
     const handleSave = async () => {
         if (!formData.name || !formData.price || !formData.category || !restaurantId) return;
         setIsLoading(true);
@@ -143,6 +181,15 @@ export default function AddDishPage() {
                 }
             }
 
+            // 2.5 Upload USDZ Model if exists
+            let uploadedUsdzUrl = undefined;
+            if (usdzModelFile) {
+                const usdzUrl = await supabaseService.uploadImage('media', usdzModelFile);
+                if (usdzUrl) {
+                    uploadedUsdzUrl = usdzUrl;
+                }
+            }
+
             // 3. Create Dish in Supabase using REAL ID
             await supabaseService.addDish({
                 restaurant_id: restaurantId, // Use the resolved UUID
@@ -151,7 +198,8 @@ export default function AddDishPage() {
                 price: parseFloat(formData.price),
                 image_url: uploadedImageUrl || 'https://picsum.photos/400/400?random=' + Math.floor(Math.random() * 100),
                 category: formData.category,
-                glb_url: uploadedArUrl // Real URL or undefined
+                glb_url: uploadedArUrl, // Real URL or undefined
+                usdz_url: uploadedUsdzUrl
             });
 
             // Brief delay for UX then redirect
@@ -205,10 +253,10 @@ export default function AddDishPage() {
             )}
 
             {/* Warning Message */}
-            {arUploadWarning && (
+            {(arUploadWarning || usdzUploadWarning) && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center gap-2 mb-4">
                     <span className="material-icons-round text-amber-500">warning</span>
-                    <span className="text-sm font-medium">{arUploadWarning}</span>
+                    <span className="text-sm font-medium">{arUploadWarning} {arUploadWarning && usdzUploadWarning && ' | '} {usdzUploadWarning}</span>
                 </div>
             )}
 
@@ -366,52 +414,111 @@ export default function AddDishPage() {
                             accept=".glb"
                             onChange={handleArModelChange}
                         />
+                        <input
+                            type="file"
+                            ref={usdzInputRef}
+                            className="hidden"
+                            accept=".usdz"
+                            onChange={handleUsdzModelChange}
+                        />
 
-                        {!arModelFile ? (
-                            <div
-                                className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-secondary/30 transition-all"
-                                onClick={() => arInputRef.current?.click()}
-                            >
-                                <span className="material-icons-round text-3xl text-muted-foreground mb-2">cloud_upload</span>
-                                <span className="text-sm font-medium text-foreground">Upload .GLB</span>
-                            </div>
-                        ) : (
-                            <div className="bg-secondary/30 border border-border rounded-xl p-4">
-                                <div className="flex items-start justify-between mb-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
-                                            <span className="material-icons-round">deployed_code</span>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-foreground truncate max-w-[150px]">{arModelFile.name}</p>
-                                            <p className="text-xs text-muted-foreground">{(arModelFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                                        </div>
-                                    </div>
-                                    <button onClick={(e) => { e.stopPropagation(); setArModelFile(null); }} className="text-muted-foreground hover:text-red-500">
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* GLB Upload */}
+                            {!arModelFile ? (
+                                <div
+                                    className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-secondary/30 transition-all h-full min-h-[160px] min-w-0"
+                                    onClick={() => arInputRef.current?.click()}
+                                >
+                                    <span className="material-icons-round text-3xl text-muted-foreground mb-2">cloud_upload</span>
+                                    <span className="text-sm font-medium text-foreground">Upload .GLB (Android)</span>
+                                </div>
+                            ) : (
+                                <div className="bg-secondary/30 border border-border rounded-xl p-4 flex flex-col justify-between h-full min-h-[160px] relative min-w-0">
+                                    <button onClick={(e) => { e.stopPropagation(); setArModelFile(null); }} className="absolute top-2 right-2 text-muted-foreground hover:text-red-500 bg-secondary/80 rounded-full p-1 z-10">
                                         <span className="material-icons-round text-sm">close</span>
                                     </button>
+                                    <div>
+                                        <div className="flex items-start mb-2">
+                                            <div className="flex items-center gap-3 min-w-0 w-full pr-6">
+                                                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                                    <span className="material-icons-round">deployed_code</span>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-bold text-foreground truncate">{arModelFile.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{(arModelFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {uploadProgress < 100 ? (
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between text-xs font-medium">
+                                                    <span className="text-blue-600">Uploading...</span>
+                                                    <span className="text-blue-600">{uploadProgress}%</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 text-xs font-medium text-green-600 mt-2">
+                                                <span className="material-icons-round text-sm">check_circle</span>
+                                                Upload Complete
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">Supports .glb files up to 15MB.</p>
                                 </div>
+                            )}
 
-                                {uploadProgress < 100 ? (
-                                    <div className="space-y-1">
-                                        <div className="flex justify-between text-xs font-medium">
-                                            <span className="text-blue-600">Uploading...</span>
-                                            <span className="text-blue-600">{uploadProgress}%</span>
+                            {/* USDZ Upload */}
+                            {!usdzModelFile ? (
+                                <div
+                                    className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-secondary/30 transition-all h-full min-h-[160px] min-w-0"
+                                    onClick={() => usdzInputRef.current?.click()}
+                                >
+                                    <span className="material-icons-round text-3xl text-muted-foreground mb-2">cloud_upload</span>
+                                    <span className="text-sm font-medium text-foreground">Upload .USDZ (iOS)</span>
+                                </div>
+                            ) : (
+                                <div className="bg-secondary/30 border border-border rounded-xl p-4 flex flex-col justify-between h-full min-h-[160px] relative min-w-0">
+                                    <button onClick={(e) => { e.stopPropagation(); setUsdzModelFile(null); }} className="absolute top-2 right-2 text-muted-foreground hover:text-red-500 bg-secondary/80 rounded-full p-1 z-10">
+                                        <span className="material-icons-round text-sm">close</span>
+                                    </button>
+                                    <div>
+                                        <div className="flex items-start mb-2">
+                                            <div className="flex items-center gap-3 min-w-0 w-full pr-6">
+                                                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                                                    <span className="material-icons-round">deployed_code</span>
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-sm font-bold text-foreground truncate">{usdzModelFile.name}</p>
+                                                    <p className="text-xs text-muted-foreground">{(usdzModelFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
-                                            <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${uploadProgress}%` }}></div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-1 text-xs font-medium text-green-600 mt-2">
-                                        <span className="material-icons-round text-sm">check_circle</span>
-                                        Upload Complete
-                                    </div>
-                                )}
 
-                                <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">Supports .glb files up to 15MB (recommended).</p>
-                            </div>
-                        )}
+                                        {usdzUploadProgress < 100 ? (
+                                            <div className="space-y-1">
+                                                <div className="flex justify-between text-xs font-medium">
+                                                    <span className="text-blue-600">Uploading...</span>
+                                                    <span className="text-blue-600">{usdzUploadProgress}%</span>
+                                                </div>
+                                                <div className="h-1.5 w-full bg-blue-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-blue-500 rounded-full transition-all duration-200" style={{ width: `${usdzUploadProgress}%` }}></div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-1 text-xs font-medium text-green-600 mt-2">
+                                                <span className="material-icons-round text-sm">check_circle</span>
+                                                Upload Complete
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-2 pt-2 border-t border-border/50">Supports .usdz files up to 15MB.</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

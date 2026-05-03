@@ -100,7 +100,9 @@ export default function RestaurantListPage() {
                                 </td>
                             </tr>
                         ) : (
-                            restaurants.map((repo) => (
+                            restaurants.map((repo, index) => {
+                                const isLastRow = index === restaurants.length - 1 && restaurants.length > 2;
+                                return (
                                 <tr
                                     key={repo.id}
                                     className="hover:bg-secondary/30 transition-colors group relative"
@@ -149,7 +151,7 @@ export default function RestaurantListPage() {
 
                                         {/* Dropdown Menu */}
                                         {activeActionId === repo.id && (
-                                            <div className="absolute right-8 top-12 w-48 bg-white rounded-xl shadow-xl border border-border z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                                            <div className={`absolute right-8 ${isLastRow ? 'bottom-12 origin-bottom-right' : 'top-12 origin-top-right'} w-48 bg-white rounded-xl shadow-xl border border-border z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200`}>
                                                 <div className="p-1">
                                                     <button
                                                         onClick={() => router.push(`/admin/restaurants/${repo.id}/edit`)}
@@ -178,7 +180,8 @@ export default function RestaurantListPage() {
                                         )}
                                     </td>
                                 </tr>
-                            ))
+                                );
+                            })
                         )}
                     </tbody>
                 </table>
