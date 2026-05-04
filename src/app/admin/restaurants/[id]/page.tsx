@@ -98,19 +98,19 @@ export default function RestaurantDetailDashboard() {
 
     // Generate Chart Data
     const data = [
-        { name: 'Mon', views: pseudoRandom(1, 200, 500), orders: pseudoRandom(2, 50, 200) },
-        { name: 'Tue', views: pseudoRandom(3, 150, 400), orders: pseudoRandom(4, 40, 150) },
-        { name: 'Wed', views: pseudoRandom(5, 300, 800), orders: pseudoRandom(6, 100, 400) },
-        { name: 'Thu', views: pseudoRandom(7, 250, 600), orders: pseudoRandom(8, 80, 250) },
-        { name: 'Fri', views: pseudoRandom(9, 400, 900), orders: pseudoRandom(10, 150, 500) },
-        { name: 'Sat', views: pseudoRandom(11, 350, 850), orders: pseudoRandom(12, 140, 450) },
-        { name: 'Sun', views: pseudoRandom(13, 300, 700), orders: pseudoRandom(14, 120, 350) },
+        { name: 'Mon', views: 0, orders: 0 },
+        { name: 'Tue', views: 0, orders: 0 },
+        { name: 'Wed', views: 0, orders: 0 },
+        { name: 'Thu', views: 0, orders: 0 },
+        { name: 'Fri', views: 0, orders: 0 },
+        { name: 'Sat', views: 0, orders: 0 },
+        { name: 'Sun', views: 0, orders: 0 },
     ];
 
     // Generate Key Metrics
-    const totalScans = data.reduce((acc, curr) => acc + curr.views, 0);
-    const interactions = Math.floor(totalScans * (pseudoRandom(50, 40, 70) / 100)); // 40-70% interaction rate
-    const ctr = (pseudoRandom(60, 15, 35) / 10 + 10).toFixed(1); // 10% - 35% CTR
+    const totalScans = 0;
+    const interactions = 0;
+    const ctr = "0.0";
 
 
 
@@ -155,9 +155,9 @@ export default function RestaurantDetailDashboard() {
                             <div className="relative z-10">
                                 <p className="text-sm font-medium text-muted-foreground">Total Menu Scans</p>
                                 <h3 className="text-3xl font-bold text-foreground mt-2">{totalScans.toLocaleString()}</h3>
-                                <span className="text-green-600 text-xs font-bold mt-2 inline-flex items-center bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-                                    <span className="material-icons-round text-xs mr-0.5">trending_up</span>
-                                    +{pseudoRandom(90, 5, 25)}.3%
+                                <span className="text-muted-foreground text-xs font-bold mt-2 inline-flex items-center bg-secondary px-2 py-0.5 rounded-full border border-border">
+                                    <span className="material-icons-round text-xs mr-0.5">horizontal_rule</span>
+                                    0%
                                 </span>
                             </div>
                             <span className="material-icons-round absolute -bottom-4 -right-4 text-9xl text-muted-foreground/10 group-hover:text-primary/10 transition-colors group-hover:scale-110 duration-500">qr_code_scanner</span>
@@ -166,9 +166,9 @@ export default function RestaurantDetailDashboard() {
                             <div className="relative z-10">
                                 <p className="text-sm font-medium text-muted-foreground">AR Interactions</p>
                                 <h3 className="text-3xl font-bold text-foreground mt-2">{interactions.toLocaleString()}</h3>
-                                <span className="text-green-600 text-xs font-bold mt-2 inline-flex items-center bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
-                                    <span className="material-icons-round text-xs mr-0.5">trending_up</span>
-                                    +{pseudoRandom(91, 2, 15)}.2%
+                                <span className="text-muted-foreground text-xs font-bold mt-2 inline-flex items-center bg-secondary px-2 py-0.5 rounded-full border border-border">
+                                    <span className="material-icons-round text-xs mr-0.5">horizontal_rule</span>
+                                    0%
                                 </span>
                             </div>
                             <span className="material-icons-round absolute -bottom-4 -right-4 text-9xl text-muted-foreground/10 group-hover:text-accent/10 transition-colors group-hover:scale-110 duration-500">view_in_ar</span>

@@ -10,38 +10,28 @@ import { Button } from '@/components/ui/Button';
 // --- Mock Data ---
 
 const dailyEngagementData = [
-    { date: 'May 01', qr: 40000, ar: 24000 },
-    { date: 'May 05', qr: 45000, ar: 28000 },
-    { date: 'May 10', qr: 42000, ar: 35000 },
-    { date: 'May 15', qr: 52000, ar: 42000 },
-    { date: 'May 20', qr: 48000, ar: 38000 },
-    { date: 'May 25', qr: 58000, ar: 48000 },
-    { date: 'May 30', qr: 62000, ar: 55000 },
+    { date: 'May 01', qr: 0, ar: 0 },
+    { date: 'May 05', qr: 0, ar: 0 },
+    { date: 'May 10', qr: 0, ar: 0 },
+    { date: 'May 15', qr: 0, ar: 0 },
+    { date: 'May 20', qr: 0, ar: 0 },
+    { date: 'May 25', qr: 0, ar: 0 },
+    { date: 'May 30', qr: 0, ar: 0 },
 ];
 
 const deviceData = [
-    { name: 'iOS', value: 65, color: '#3B82F6' },
-    { name: 'Android', value: 35, color: '#06B6D4' },
+    { name: 'iOS', value: 0, color: '#3B82F6' },
+    { name: 'Android', value: 0, color: '#06B6D4' },
 ];
 
-const topRestaurants = [
-    { name: 'Burger & Co.', scans: 12405, max: 15000 },
-    { name: 'The Pasta House', scans: 10892, max: 15000 },
-    { name: 'Sushi Zen', scans: 8234, max: 15000 },
-    { name: 'Taco Fiesta', scans: 6120, max: 15000 },
-    { name: 'Green Leaf Cafe', scans: 4500, max: 15000 },
-];
+const topRestaurants: { name: string; scans: number; max: number }[] = [];
 
-const recentTenants = [
-    { id: 1, name: 'La Pizzeria Roma', status: 'Active', date: 'Oct 24, 2023', plan: 'Enterprise', initial: 'L', color: 'bg-blue-100 text-blue-700' },
-    { id: 2, name: "Momo's Dumplings", status: 'Pending', date: 'Oct 23, 2023', plan: 'Pro', initial: 'M', color: 'bg-purple-100 text-purple-700' },
-    { id: 3, name: 'Burger King Downtown', status: 'Active', date: 'Oct 21, 2023', plan: 'Enterprise', initial: 'B', color: 'bg-orange-100 text-orange-700' },
-];
+const recentTenants: { id: number; name: string; status: string; date: string; plan: string; initial: string; color: string }[] = [];
 
 // Sparkline Data
-const scansSpark = [{ v: 10 }, { v: 15 }, { v: 13 }, { v: 20 }, { v: 18 }, { v: 25 }, { v: 30 }];
-const interactionSpark = [{ v: 20 }, { v: 22 }, { v: 25 }, { v: 24 }, { v: 28 }, { v: 32 }, { v: 30 }];
-const sessionSpark = [{ v: 40 }, { v: 38 }, { v: 35 }, { v: 36 }, { v: 32 }, { v: 30 }, { v: 28 }];
+const scansSpark = [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }];
+const interactionSpark = [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }];
+const sessionSpark = [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }];
 
 export default function AnalyticsPage() {
     const [timeRange, setTimeRange] = useState('30D');
@@ -99,11 +89,11 @@ export default function AnalyticsPage() {
                     <div className="flex justify-between items-start mb-4 relative z-10">
                         <div>
                             <p className="text-sm font-medium text-muted-foreground">Total Global Scans</p>
-                            <h3 className="text-3xl font-bold text-foreground mt-1">124,592</h3>
+                            <h3 className="text-3xl font-bold text-foreground mt-1">0</h3>
                         </div>
-                        <span className="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                            <span className="material-icons-round text-xs">trending_up</span>
-                            +12%
+                        <span className="bg-secondary text-muted-foreground text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="material-icons-round text-xs">horizontal_rule</span>
+                            0%
                         </span>
                     </div>
                     <div className="h-16 -mx-2 opacity-50 relative z-0">
@@ -126,11 +116,11 @@ export default function AnalyticsPage() {
                     <div className="flex justify-between items-start mb-4 relative z-10">
                         <div>
                             <p className="text-sm font-medium text-muted-foreground">AR Interaction Rate</p>
-                            <h3 className="text-3xl font-bold text-foreground mt-1">48.2%</h3>
+                            <h3 className="text-3xl font-bold text-foreground mt-1">0%</h3>
                         </div>
-                        <span className="bg-green-50 text-green-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                            <span className="material-icons-round text-xs">trending_up</span>
-                            +5.2%
+                        <span className="bg-secondary text-muted-foreground text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="material-icons-round text-xs">horizontal_rule</span>
+                            0%
                         </span>
                     </div>
                     <div className="h-16 -mx-2 opacity-50 relative z-0">
@@ -153,11 +143,11 @@ export default function AnalyticsPage() {
                     <div className="flex justify-between items-start mb-4 relative z-10">
                         <div>
                             <p className="text-sm font-medium text-muted-foreground">Avg. Session Time</p>
-                            <h3 className="text-3xl font-bold text-foreground mt-1">2m 14s</h3>
+                            <h3 className="text-3xl font-bold text-foreground mt-1">--</h3>
                         </div>
-                        <span className="bg-red-50 text-red-700 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
-                            <span className="material-icons-round text-xs">trending_down</span>
-                            -2.1%
+                        <span className="bg-secondary text-muted-foreground text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                            <span className="material-icons-round text-xs">horizontal_rule</span>
+                            0%
                         </span>
                     </div>
                     <div className="h-16 -mx-2 opacity-50 relative z-0">
@@ -287,7 +277,7 @@ export default function AnalyticsPage() {
                                 </ResponsiveContainer>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                                     <span className="text-xs text-muted-foreground">Total</span>
-                                    <span className="text-md font-bold text-foreground">100%</span>
+                                    <span className="text-md font-bold text-foreground">0%</span>
                                 </div>
                             </div>
                             <div className="space-y-3 flex-1">
@@ -397,20 +387,7 @@ export default function AnalyticsPage() {
                                     <div className="flex-1 grid grid-cols-24 gap-1">
                                         {Array.from({ length: 24 }).map((_, hIndex) => {
                                             // Generate deterministic "random" intensity for demo
-                                            let baseIntensity = 0.2;
-
-                                            // Lunch rush (11am - 2pm)
-                                            if (hIndex >= 11 && hIndex <= 13) baseIntensity += 0.5;
-                                            // Dinner rush (6pm - 9pm)
-                                            if (hIndex >= 18 && hIndex <= 20) baseIntensity += 0.6;
-
-                                            // Weekend boost
-                                            if (day === 'Fri' || day === 'Sat') baseIntensity += 0.3;
-
-                                            // Normalize 0-1 with some randomness
-                                            const seed = day.charCodeAt(0) + hIndex;
-                                            const randomFactor = Math.sin(seed) * 0.2;
-                                            let intensity = Math.min(Math.max(baseIntensity + randomFactor, 0.05), 1);
+                                            let intensity = 0;
 
                                             // Determine color class
                                             let colorClass = 'bg-primary/5 hover:bg-primary/10';

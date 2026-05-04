@@ -13,30 +13,24 @@ export default function SuperAdminDashboard() {
     const router = useRouter();
 
     // --- Mock Data ---
-    const sparklineData1 = [{ v: 10 }, { v: 25 }, { v: 18 }, { v: 40 }, { v: 35 }, { v: 50 }, { v: 65 }];
-    const sparklineData2 = [{ v: 30 }, { v: 25 }, { v: 35 }, { v: 30 }, { v: 45 }, { v: 55 }, { v: 60 }];
-    const sparklineData3 = [{ v: 15 }, { v: 20 }, { v: 18 }, { v: 25 }, { v: 22 }, { v: 30 }, { v: 38 }];
+    const sparklineData1 = [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }];
+    const sparklineData2 = [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }];
+    const sparklineData3 = [{ v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }, { v: 0 }];
 
     const barChartData = [
-        { name: 'Mon', scans: 2400 },
-        { name: 'Tue', scans: 3200 },
-        { name: 'Wed', scans: 2800 },
-        { name: 'Thu', scans: 3600 },
-        { name: 'Fri', scans: 4800 },
-        { name: 'Sat', scans: 5200 },
-        { name: 'Sun', scans: 4300 },
+        { name: 'Mon', scans: 0 },
+        { name: 'Tue', scans: 0 },
+        { name: 'Wed', scans: 0 },
+        { name: 'Thu', scans: 0 },
+        { name: 'Fri', scans: 0 },
+        { name: 'Sat', scans: 0 },
+        { name: 'Sun', scans: 0 },
     ];
 
-    const topRestaurants = [
-        { name: 'The Coastal Catch', category: 'Seafood', scans: 12450, color: 'bg-cyan-500' },
-        { name: 'Urban Spice', category: 'Indian', scans: 9230, color: 'bg-orange-500' },
-        { name: 'Green Leaf', category: 'Vegan', scans: 8105, color: 'bg-green-500' },
-        { name: 'Sushi Zen', category: 'Japanese', scans: 6400, color: 'bg-rose-500' },
-        { name: 'Burger Joint', category: 'American', scans: 4200, color: 'bg-yellow-500' },
-    ];
+    const topRestaurants: { name: string; category: string; scans: number; color: string }[] = [];
 
     // Gauge Data
-    const gaugeValue = 85;
+    const gaugeValue = 0;
     const gaugeData = [
         {
             name: 'Scans',
@@ -86,11 +80,11 @@ export default function SuperAdminDashboard() {
                             <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary mb-4">
                                 <span className="material-icons-round">qr_code_scanner</span>
                             </div>
-                            <span className="bg-green-50 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full border border-green-100 flex items-center gap-1">
-                                <span className="material-icons-round text-xs">trending_up</span> 12%
+                            <span className="bg-secondary text-muted-foreground text-xs font-bold px-2.5 py-1 rounded-full border border-border flex items-center gap-1">
+                                <span className="material-icons-round text-xs">horizontal_rule</span> 0%
                             </span>
                         </div>
-                        <h3 className="text-3xl font-bold text-foreground">24,567</h3>
+                        <h3 className="text-3xl font-bold text-foreground">0</h3>
                         <p className="text-muted-foreground text-sm font-medium">Total Scans (7d)</p>
                     </div>
 
@@ -117,11 +111,11 @@ export default function SuperAdminDashboard() {
                             <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 mb-4">
                                 <span className="material-icons-round">store</span>
                             </div>
-                            <span className="bg-green-50 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full border border-green-100 flex items-center gap-1">
-                                <span className="material-icons-round text-xs">trending_up</span> 5%
+                            <span className="bg-secondary text-muted-foreground text-xs font-bold px-2.5 py-1 rounded-full border border-border flex items-center gap-1">
+                                <span className="material-icons-round text-xs">horizontal_rule</span> 0%
                             </span>
                         </div>
-                        <h3 className="text-3xl font-bold text-foreground">412</h3>
+                        <h3 className="text-3xl font-bold text-foreground">0</h3>
                         <p className="text-muted-foreground text-sm font-medium">Active Restaurants</p>
                     </div>
 
@@ -152,12 +146,12 @@ export default function SuperAdminDashboard() {
 
                     <div>
                         <p className="text-muted-foreground text-sm font-medium mb-1">Top Performing Dish</p>
-                        <h3 className="text-2xl font-bold text-foreground">Spicy Tuna Roll</h3>
+                        <h3 className="text-2xl font-bold text-foreground">--</h3>
                         <div className="flex items-center gap-2 mt-3">
                             <div className="h-1.5 flex-1 bg-secondary rounded-full overflow-hidden">
-                                <div className="h-full bg-blue-500 w-[78%] rounded-full"></div>
+                                <div className="h-full bg-blue-500 w-[0%] rounded-full"></div>
                             </div>
-                            <span className="text-xs font-bold text-blue-600">78% Conv.</span>
+                            <span className="text-xs font-bold text-blue-600">0% Conv.</span>
                         </div>
                     </div>
                 </div>
@@ -238,11 +232,11 @@ export default function SuperAdminDashboard() {
                     <div className="flex justify-center gap-12 w-full mt-2">
                         <div className="text-center">
                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Avg</p>
-                            <p className="font-bold text-foreground text-lg">45</p>
+                            <p className="font-bold text-foreground text-lg">0</p>
                         </div>
                         <div className="text-center">
                             <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Peak</p>
-                            <p className="font-bold text-foreground text-lg">112</p>
+                            <p className="font-bold text-foreground text-lg">0</p>
                         </div>
                     </div>
                 </div>
