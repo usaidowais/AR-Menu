@@ -24,27 +24,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
 }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
-    const [isARActive, setIsARActive] = useState(false);
     const modelViewerRef = useRef<HTMLElement>(null);
-
-    // Function to handle the capture
-    const handleCapture = async () => {
-        if (!modelViewerRef.current) return;
-        try {
-            // @ts-ignore - toBlob is a valid method on the model-viewer element
-            const blob = await (modelViewerRef.current as any).toBlob({ idealAspect: true });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${dishName.replace(/\s+/g, '-')}-AR-Snapshot.png`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        } catch (error) {
-            console.error("Failed to capture AR screenshot:", error);
-        }
-    };
 
     // Log what we received
     console.log("AR COMPONENT RECEIVED URL:", modelUrl);
@@ -75,15 +55,6 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
         viewer.addEventListener('load', handleLoad);
         viewer.addEventListener('error', handleError);
 
-        const handleARStatus = (event: any) => {
-            if (event.detail.status === 'session-started') {
-                setIsARActive(true);
-            } else if (event.detail.status === 'not-presenting') {
-                setIsARActive(false);
-            }
-        };
-        viewer.addEventListener('ar-status', handleARStatus);
-
         // 4. Safety Timeout (Fallback)
         // If the model loads super fast (cached) or event is missed, force hide loader after 5 seconds.
         const safetyTimer = setTimeout(() => {
@@ -96,7 +67,6 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
         return () => {
             viewer.removeEventListener('load', handleLoad);
             viewer.removeEventListener('error', handleError);
-            viewer.removeEventListener('ar-status', handleARStatus);
             clearTimeout(safetyTimer);
         };
     }, []); // Run once on mount
@@ -188,19 +158,6 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                     </div>
                 </div>
 
-                {/* WebXR DOM Overlay Capture Button (Only shows during Android WebXR) */}
-                {isARActive && (
-                    <button
-                        slot="ar-ui"
-                        onClick={handleCapture}
-                        className="absolute bottom-8 right-1/2 translate-x-1/2 z-[100] w-16 h-16 bg-white/50 backdrop-blur-md border-4 border-white rounded-full flex items-center justify-center shadow-2xl active:scale-90 transition-transform pointer-events-auto"
-                        aria-label="Capture snapshot"
-                    >
-                        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                            <span className="material-icons-round text-black text-xl">camera_alt</span>
-                        </div>
-                    </button>
-                )}
 
                 {/* Custom AR Button (Strictly Required for iOS/Android Native AR Launch) */}
                 <button 
