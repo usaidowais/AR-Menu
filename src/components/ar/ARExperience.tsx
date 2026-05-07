@@ -125,6 +125,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
             {/* @ts-ignore - model-viewer is a web component */}
             <model-viewer
                 ref={modelViewerRef}
+                className={`w-full h-full ${!isLoading && !hasError ? 'animate-ar-pop' : 'opacity-0'}`}
                 src={modelUrl}
                 ios-src={iosSrc || modelUrl}
                 alt={alt}
@@ -138,7 +139,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 ar-scale="fixed"
                 ar-placement="floor"
                 touch-action="pan-y"
-                style={{ width: '100%', height: '100%', backgroundColor: '#1a1a1a' }}
+                style={{ width: '100%', height: '100%', backgroundColor: 'transparent' }}
                 crossorigin="anonymous"
                 loading="eager"
                 reveal="auto"
