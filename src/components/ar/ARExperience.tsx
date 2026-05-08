@@ -71,6 +71,44 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
         };
     }, []); // Run once on mount
 
+    // 3D Model Entrance Animation State
+    const [animProgress, setAnimProgress] = useState(0);
+
+    useEffect(() => {
+        if (!isLoading && !hasError) {
+            let start: number | null = null;
+            const duration = 1000; // 1 second animation
+            let frameId: number;
+
+            const animate = (time: number) => {
+                if (start === null) start = time;
+                let progress = (time - start) / duration;
+                if (progress > 1) progress = 1;
+
+                // cubic ease out
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                setAnimProgress(easeOut);
+
+                if (progress < 1) {
+                    frameId = requestAnimationFrame(animate);
+                }
+            };
+            frameId = requestAnimationFrame(animate);
+
+            return () => cancelAnimationFrame(frameId);
+        } else {
+            setAnimProgress(0); // Reset while loading
+        }
+    }, [isLoading, hasError]);
+
+    // Calculate dynamic scale and rotation
+    const startScale = 0.001;
+    const targetScale = arScale || 1.0;
+    const currentScaleValue = startScale + (targetScale - startScale) * animProgress;
+    
+    // Rotate from -180deg to 0deg
+    const currentYaw = -180 + (180 * animProgress);
+
     if (!isValidUrl) {
         return (
             <div className="absolute inset-0 z-50 bg-black/90 flex flex-col items-center justify-center text-white p-4">
@@ -125,11 +163,12 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
             {/* @ts-ignore - model-viewer is a web component */}
             <model-viewer
                 ref={modelViewerRef}
-                className={`w-full h-full ${!isLoading && !hasError ? 'animate-ar-pop' : 'opacity-0'}`}
+                className={`w-full h-full transition-opacity duration-500 ${!isLoading && !hasError ? 'opacity-100' : 'opacity-0'}`}
                 src={modelUrl}
                 ios-src={iosSrc || modelUrl}
                 alt={alt}
-                scale={`${arScale} ${arScale} ${arScale}`}
+                scale={`${currentScaleValue} ${currentScaleValue} ${currentScaleValue}`}
+                orientation={`0deg ${currentYaw}deg 0deg`}
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 camera-controls
