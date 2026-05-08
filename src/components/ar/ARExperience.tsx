@@ -71,14 +71,16 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
         };
     }, []); // Run once on mount
 
-    // 3D Model Entrance Animation State
-    const [animProgress, setAnimProgress] = useState(0);
-
+    // 3D Model Entrance Animation (Direct DOM Manipulation to avoid React re-renders)
     useEffect(() => {
-        if (!isLoading && !hasError) {
+        if (!isLoading && !hasError && modelViewerRef.current) {
+            const viewer = modelViewerRef.current;
             let start: number | null = null;
             const duration = 1000; // 1 second animation
             let frameId: number;
+
+            const targetScaleValue = Number(arScale) || 1.0;
+            const startScaleValue = 0.001;
 
             const animate = (time: number) => {
                 if (start === null) start = time;
@@ -87,27 +89,29 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
 
                 // cubic ease out
                 const easeOut = 1 - Math.pow(1 - progress, 3);
-                setAnimProgress(easeOut);
+                
+                const currentScale = startScaleValue + (targetScaleValue - startScaleValue) * easeOut;
+                const currentYaw = -180 + (180 * easeOut);
+
+                // Update directly via DOM to prevent React from re-rendering the ar-button slot
+                viewer.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+                viewer.setAttribute('orientation', `0deg ${currentYaw}deg 0deg`);
 
                 if (progress < 1) {
                     frameId = requestAnimationFrame(animate);
+                } else {
+                    // Ensure final state is exact
+                    viewer.setAttribute('scale', `${targetScaleValue} ${targetScaleValue} ${targetScaleValue}`);
+                    viewer.setAttribute('orientation', `0deg 0deg 0deg`);
                 }
             };
+            
+            // Start animation
             frameId = requestAnimationFrame(animate);
 
             return () => cancelAnimationFrame(frameId);
-        } else {
-            setAnimProgress(0); // Reset while loading
         }
-    }, [isLoading, hasError]);
-
-    // Calculate dynamic scale and rotation
-    const startScale = 0.001;
-    const targetScale = arScale || 1.0;
-    const currentScaleValue = startScale + (targetScale - startScale) * animProgress;
-    
-    // Rotate from -180deg to 0deg
-    const currentYaw = -180 + (180 * animProgress);
+    }, [isLoading, hasError, arScale]);
 
     if (!isValidUrl) {
         return (
@@ -167,8 +171,8 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 src={modelUrl}
                 ios-src={iosSrc || modelUrl}
                 alt={alt}
-                scale={`${currentScaleValue} ${currentScaleValue} ${currentScaleValue}`}
-                orientation={`0deg ${currentYaw}deg 0deg`}
+                scale={`${Number(arScale) || 1.0} ${Number(arScale) || 1.0} ${Number(arScale) || 1.0}`}
+                orientation="0deg 0deg 0deg"
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 camera-controls
