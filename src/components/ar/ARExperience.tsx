@@ -71,47 +71,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
         };
     }, []); // Run once on mount
 
-    // 3D Model Entrance Animation (Direct DOM Manipulation to avoid React re-renders)
-    useEffect(() => {
-        if (!isLoading && !hasError && modelViewerRef.current) {
-            const viewer = modelViewerRef.current;
-            let start: number | null = null;
-            const duration = 1000; // 1 second animation
-            let frameId: number;
-
-            const targetScaleValue = Number(arScale) || 1.0;
-            const startScaleValue = 0.001;
-
-            const animate = (time: number) => {
-                if (start === null) start = time;
-                let progress = (time - start) / duration;
-                if (progress > 1) progress = 1;
-
-                // cubic ease out
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                
-                const currentScale = startScaleValue + (targetScaleValue - startScaleValue) * easeOut;
-                const currentYaw = -180 + (180 * easeOut);
-
-                // Update directly via DOM to prevent React from re-rendering the ar-button slot
-                viewer.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
-                viewer.setAttribute('orientation', `0deg ${currentYaw}deg 0deg`);
-
-                if (progress < 1) {
-                    frameId = requestAnimationFrame(animate);
-                } else {
-                    // Ensure final state is exact
-                    viewer.setAttribute('scale', `${targetScaleValue} ${targetScaleValue} ${targetScaleValue}`);
-                    viewer.setAttribute('orientation', `0deg 0deg 0deg`);
-                }
-            };
-            
-            // Start animation
-            frameId = requestAnimationFrame(animate);
-
-            return () => cancelAnimationFrame(frameId);
-        }
-    }, [isLoading, hasError, arScale]);
+    // Mobile-safe CSS animation takes over the entrance scaling and rotation (defined in globals.css)
 
     if (!isValidUrl) {
         return (
@@ -167,12 +127,11 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
             {/* @ts-ignore - model-viewer is a web component */}
             <model-viewer
                 ref={modelViewerRef}
-                className={`w-full h-full transition-opacity duration-500 ${!isLoading && !hasError ? 'opacity-100' : 'opacity-0'}`}
+                className={`w-full h-full ${!isLoading && !hasError ? 'animate-ar-pop' : 'opacity-0'}`}
                 src={modelUrl}
                 ios-src={iosSrc || modelUrl}
                 alt={alt}
                 scale={`${Number(arScale) || 1.0} ${Number(arScale) || 1.0} ${Number(arScale) || 1.0}`}
-                orientation="0deg 0deg 0deg"
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 camera-controls
