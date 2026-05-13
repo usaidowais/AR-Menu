@@ -173,15 +173,15 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                     Place in your space
                 </button>
 
-                {/* Camera Shutter Capture Overlay (Inside model-viewer for DOM Overlay support) */}
-                <CaptureOverlay
-                    modelViewerRef={modelViewerRef}
-                    dishName={dishName}
-                    restaurantName={restaurantName}
-                />
-
                 {/* @ts-ignore */}
             </model-viewer>
+
+            {/* Camera Shutter Capture Overlay — outside model-viewer for React rendering */}
+            <CaptureOverlay
+                modelViewerRef={modelViewerRef}
+                dishName={dishName}
+                restaurantName={restaurantName}
+            />
 
             {/* Bottom Info Card */}
             <div className="absolute bottom-6 left-4 right-4 z-[60] pointer-events-none">
