@@ -143,6 +143,7 @@ export default function SingleDishPage() {
                         dishPrice={`PKR ${dish.price}`}
                         secondaryColor={effectivePreset.secondaryColor}
                         arScale={dish.ar_scale || 1.0}
+                        restaurantName={restaurant.name}
                         onClose={() => setShowAR(false)}
                     />
                 </div>

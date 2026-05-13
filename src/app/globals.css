@@ -64,6 +64,17 @@
       opacity: 1;
     }
   }
+
+  --animate-shutter-flash: shutter-flash 150ms ease-out forwards;
+
+  @keyframes shutter-flash {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
 }
 
 :root {

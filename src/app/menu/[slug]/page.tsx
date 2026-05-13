@@ -250,6 +250,7 @@ export default function PublicMenuPage() {
                     dishPrice={`PKR ${arDish.price}`}
                     secondaryColor={effectivePreset.secondaryColor}
                     arScale={arDish.ar_scale || 1.0}
+                    restaurantName={restaurant.name}
                     onClose={() => setArDish(null)}
                 />
             )}

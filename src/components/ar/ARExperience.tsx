@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { CaptureOverlay } from '@/components/ar/CaptureOverlay';
 
 interface ARExperienceProps {
     src: string;
@@ -9,6 +10,7 @@ interface ARExperienceProps {
     dishPrice: string | number;
     secondaryColor?: string;
     arScale?: number;
+    restaurantName?: string;
     onClose: () => void;
 }
 
@@ -20,6 +22,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
     dishPrice,
     secondaryColor = '#FFD700',
     arScale = 1.0,
+    restaurantName = 'VisionDine',
     onClose
 }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -101,6 +104,15 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
             >
                 ✕
             </button>
+
+            {/* Camera Shutter Capture Overlay */}
+            {!isLoading && !hasError && (
+                <CaptureOverlay
+                    modelViewerRef={modelViewerRef}
+                    dishName={dishName}
+                    restaurantName={restaurantName}
+                />
+            )}
 
             {/* Loading Indicator - Only shows while loading */}
             {isLoading && !hasError && (
