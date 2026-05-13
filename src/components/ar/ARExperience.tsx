@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { CaptureOverlay } from '@/components/ar/CaptureOverlay';
+import { releaseCamera, prewarmCamera } from '@/lib/utils/captureUtils';
 
 interface ARExperienceProps {
     src: string;
@@ -27,6 +28,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
 }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [hasError, setHasError] = useState(false);
+    const [isInARSession, setIsInARSession] = useState(false);
     const modelViewerRef = useRef<HTMLElement>(null);
 
     // Log what we received
@@ -37,6 +39,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
     const isAstronaut = modelUrl?.includes('Astronaut.glb');
     const isValidUrl = modelUrl && modelUrl.trim() !== '' && !isAstronaut;
 
+    // ── Model load/error lifecycle ─────────────────────────────
     useEffect(() => {
         const viewer = modelViewerRef.current;
         if (!viewer) return;
@@ -74,6 +77,37 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
         };
     }, []); // Run once on mount
 
+    // ── AR Session lifecycle (camera hardware lock management) ──
+    useEffect(() => {
+        const viewer = modelViewerRef.current;
+        if (!viewer) return;
+
+        const handleARStatus = (event: any) => {
+            const status = event?.detail?.status;
+            console.log('[ARExperience] ar-status changed:', status);
+
+            if (status === 'session-started') {
+                // Native AR is taking over — release our getUserMedia camera
+                // to free the hardware for ARCore/ARKit
+                console.log('[ARExperience] Native AR session started. Releasing camera.');
+                releaseCamera();
+                setIsInARSession(true);
+            } else if (status === 'not-presenting') {
+                // User exited native AR — back to 3D web view
+                // Re-acquire camera for our composite capture pipeline
+                console.log('[ARExperience] AR session ended. Re-warming camera.');
+                setIsInARSession(false);
+                prewarmCamera();
+            }
+        };
+
+        viewer.addEventListener('ar-status', handleARStatus);
+
+        return () => {
+            viewer.removeEventListener('ar-status', handleARStatus);
+        };
+    }, []); // Run once on mount
+
     // Mobile-safe CSS animation takes over the entrance scaling and rotation (defined in globals.css)
 
     if (!isValidUrl) {
@@ -97,7 +131,7 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
 
     return (
         <div className="absolute inset-0 z-50 bg-black">
-            {/* Close Button */}
+            {/* Close Button — always visible, even in AR (sits above everything) */}
             <button
                 onClick={onClose}
                 className="absolute top-4 right-4 z-[70] bg-white text-black w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-lg hover:bg-gray-100 active:scale-95 transition-all"
@@ -176,30 +210,47 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 {/* @ts-ignore */}
             </model-viewer>
 
-            {/* Camera Shutter Capture Overlay — outside model-viewer for React rendering */}
-            <CaptureOverlay
-                modelViewerRef={modelViewerRef}
-                dishName={dishName}
-                restaurantName={restaurantName}
-            />
+            {/*
+              Camera Shutter Capture Overlay
+              ─────────────────────────────────────────────────────────
+              ONLY visible in the standard 3D web view (not in native AR).
+              
+              When native AR is active (isInARSession === true):
+              - Our getUserMedia camera is released (hardware freed for ARCore/ARKit)
+              - WebXR blocks JS pixel access, so composite capture is impossible
+              - User relies on the native system screenshot/AR UI instead
+              
+              When back in 3D web view (isInARSession === false):
+              - Camera is re-warmed for composite capture
+              - Shutter button is visible and functional
+            */}
+            {!isInARSession && (
+                <CaptureOverlay
+                    modelViewerRef={modelViewerRef}
+                    dishName={dishName}
+                    restaurantName={restaurantName}
+                />
+            )}
 
-            {/* Bottom Info Card */}
-            <div className="absolute bottom-6 left-4 right-4 z-[60] pointer-events-none">
-                <div className="bg-white/95 backdrop-blur-2xl rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/50 pointer-events-auto">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900 font-serif leading-tight">{dishName}</h2>
-                            <p className="text-gray-500 text-[10px] mt-0.5 uppercase tracking-wider font-bold">AR Preview</p>
+            {/* Bottom Info Card — also hidden during native AR session */}
+            {!isInARSession && (
+                <div className="absolute bottom-6 left-4 right-4 z-[60] pointer-events-none">
+                    <div className="bg-white/95 backdrop-blur-2xl rounded-2xl p-4 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/50 pointer-events-auto">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-900 font-serif leading-tight">{dishName}</h2>
+                                <p className="text-gray-500 text-[10px] mt-0.5 uppercase tracking-wider font-bold">AR Preview</p>
+                            </div>
+                            <span
+                                className="text-base font-bold font-serif px-2 py-1 bg-gray-100 rounded-lg"
+                                style={{ color: secondaryColor }}
+                            >
+                                {typeof dishPrice === 'number' ? `PKR ${dishPrice}` : dishPrice}
+                            </span>
                         </div>
-                        <span
-                            className="text-base font-bold font-serif px-2 py-1 bg-gray-100 rounded-lg"
-                            style={{ color: secondaryColor }}
-                        >
-                            {typeof dishPrice === 'number' ? `PKR ${dishPrice}` : dishPrice}
-                        </span>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
