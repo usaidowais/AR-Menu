@@ -105,15 +105,6 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 ✕
             </button>
 
-            {/* Camera Shutter Capture Overlay */}
-            {!isLoading && !hasError && (
-                <CaptureOverlay
-                    modelViewerRef={modelViewerRef}
-                    dishName={dishName}
-                    restaurantName={restaurantName}
-                />
-            )}
-
             {/* Loading Indicator - Only shows while loading */}
             {isLoading && !hasError && (
                 <div className="absolute inset-0 z-[65] flex flex-col items-center justify-center bg-black">
@@ -181,6 +172,14 @@ export const ARExperience: React.FC<ARExperienceProps> = ({
                 >
                     Place in your space
                 </button>
+
+                {/* Camera Shutter Capture Overlay (Inside model-viewer for DOM Overlay support) */}
+                <CaptureOverlay
+                    modelViewerRef={modelViewerRef}
+                    dishName={dishName}
+                    restaurantName={restaurantName}
+                />
+
                 {/* @ts-ignore */}
             </model-viewer>
 

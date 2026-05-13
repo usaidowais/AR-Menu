@@ -21,6 +21,10 @@ export const CaptureOverlay: React.FC<CaptureOverlayProps> = ({
   const [isFlashing, setIsFlashing] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
 
+  React.useEffect(() => {
+    console.log("[CaptureOverlay] Mounted for:", dishName);
+  }, [dishName]);
+
   const handleCapture = useCallback(async () => {
     if (isCapturing) return; // Prevent double-clicks
 
@@ -48,7 +52,7 @@ export const CaptureOverlay: React.FC<CaptureOverlayProps> = ({
       {/* ── Shutter Flash Overlay ──────────────────────────────── */}
       {isFlashing && (
         <div
-          className="fixed inset-0 z-[200] pointer-events-none animate-shutter-flash"
+          className="absolute inset-0 z-[1000] pointer-events-none animate-shutter-flash"
           style={{ backgroundColor: 'white' }}
           aria-hidden="true"
         />
@@ -57,7 +61,7 @@ export const CaptureOverlay: React.FC<CaptureOverlayProps> = ({
       {/* ── Shutter Button Container ──────────────────────────── */}
       {/* pointer-events: none on the wrapper keeps AR interactive */}
       <div
-        className="absolute bottom-44 left-0 right-0 z-[75] flex flex-col items-center pointer-events-none"
+        className="absolute bottom-52 left-0 right-0 z-[999] flex flex-col items-center pointer-events-none"
         id="capture-overlay"
       >
         {/* Shutter Button — double-ring camera style */}
