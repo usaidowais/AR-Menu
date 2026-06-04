@@ -206,9 +206,9 @@ export const CaptureOverlay: React.FC<CaptureOverlayProps> = ({
         </div>
       )}
 
-      {/* ── Shutter Button Container ──────────────────────────── */}
+      {/* ── Shutter Button Container (positioned above the info card) ── */}
       <div
-        className="absolute bottom-8 left-0 right-0 z-[999] flex flex-col items-center pointer-events-none"
+        className="absolute bottom-28 left-0 right-0 z-[999] flex flex-col items-center pointer-events-none"
         id="capture-overlay"
         style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
       >

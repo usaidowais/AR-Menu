@@ -3,6 +3,9 @@
 @theme {
   --font-inter: var(--font-inter);
   --font-playfair: var(--font-playfair);
+  --font-manrope: var(--font-manrope);
+  --font-hanken: var(--font-hanken);
+  --font-jetbrains: var(--font-jetbrains);
 
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
@@ -137,6 +140,11 @@
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+  }
+
   * {
     @apply border-border;
   }

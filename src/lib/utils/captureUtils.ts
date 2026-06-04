@@ -64,16 +64,67 @@ let _cameraStream: MediaStream | null = null;
 let _videoElement: HTMLVideoElement | null = null;
 
 /**
- * Gets or creates a live camera feed video element.
- * Returns null if camera access is denied or unavailable.
+ * The background <video> element from ARExperience that is VISIBLE to the user.
+ * When set, the composite capture pipeline draws from this exact element,
+ * ensuring the captured frame matches what the user sees on screen.
+ */
+let _backgroundVideoElement: HTMLVideoElement | null = null;
+
+/**
+ * Register the visible background <video> element from ARExperience.
+ * The composite capture pipeline will use this as its primary frame source.
+ */
+export function setBackgroundVideoElement(el: HTMLVideoElement | null): void {
+  _backgroundVideoElement = el;
+  if (el) {
+    _videoElement = el; // Also set as the primary video element
+    console.log('[CaptureUtils] Background video element registered.');
+  }
+}
+
+/**
+ * Get or create a camera MediaStream (getUserMedia).
+ * Shared by both ARExperience (visible <video>) and captureUtils (composite capture).
+ * Returns the same stream instance to avoid duplicate hardware access.
+ */
+export async function getCameraStream(): Promise<MediaStream | null> {
+  if (_cameraStream && _cameraStream.active) {
+    return _cameraStream;
+  }
+
+  try {
+    _cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' }, // rear camera
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+      },
+      audio: false,
+    });
+    console.log('[CaptureUtils] Camera stream acquired.');
+    return _cameraStream;
+  } catch (err) {
+    console.warn('[CaptureUtils] Camera access denied:', err);
+    return null;
+  }
+}
+
+/**
+ * Gets the live camera video element for composite capture.
+ * Priority: registered background video → fallback hidden video → null.
  */
 async function getCameraVideoElement(): Promise<HTMLVideoElement | null> {
-  // Check if we already have a playing video
+  // Priority 1: The visible background <video> from ARExperience
+  if (_backgroundVideoElement && _backgroundVideoElement.readyState >= 2 && !_backgroundVideoElement.paused) {
+    return _backgroundVideoElement;
+  }
+
+  // Priority 2: Already have a playing hidden video
   if (_videoElement && _videoElement.readyState >= 2 && !_videoElement.paused) {
     return _videoElement;
   }
 
-  // Try to find an existing <video> element on the page (some AR setups inject one)
+  // Priority 3: Find any existing autoplay video on the page
   const existingVideo = document.querySelector('video[autoplay]') as HTMLVideoElement | null;
   if (existingVideo && existingVideo.readyState >= 2 && existingVideo.videoWidth > 0) {
     console.log('[CaptureUtils] Found existing camera <video> element.');
@@ -81,21 +132,13 @@ async function getCameraVideoElement(): Promise<HTMLVideoElement | null> {
     return existingVideo;
   }
 
-  // Request camera access via getUserMedia
+  // Priority 4: Create a hidden video with a new/existing stream
   try {
-    if (!_cameraStream || !_cameraStream.active) {
-      _cameraStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' }, // rear camera
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      });
-    }
+    const stream = await getCameraStream();
+    if (!stream) return null;
 
     const video = document.createElement('video');
-    video.srcObject = _cameraStream;
+    video.srcObject = stream;
     video.setAttribute('playsinline', 'true');
     video.setAttribute('autoplay', 'true');
     video.muted = true;
@@ -122,7 +165,7 @@ async function getCameraVideoElement(): Promise<HTMLVideoElement | null> {
     });
 
     _videoElement = video;
-    console.log('[CaptureUtils] Camera feed acquired:', video.videoWidth, 'x', video.videoHeight);
+    console.log('[CaptureUtils] Hidden camera feed acquired:', video.videoWidth, 'x', video.videoHeight);
     return video;
   } catch (err) {
     console.warn('[CaptureUtils] Camera access unavailable, will capture model-only:', err);
@@ -390,10 +433,14 @@ export async function prewarmCamera(): Promise<void> {
  * Call this when the AR experience unmounts.
  */
 export function releaseCamera(): void {
+  // Clear the background video reference (ARExperience manages its own element)
+  _backgroundVideoElement = null;
+
   if (_videoElement) {
     _videoElement.pause();
     _videoElement.srcObject = null;
-    if (_videoElement.parentNode) {
+    // Only remove from DOM if it's our hidden element (not the visible background video)
+    if (_videoElement.parentNode && _videoElement.style.position === 'fixed') {
       _videoElement.parentNode.removeChild(_videoElement);
     }
     _videoElement = null;

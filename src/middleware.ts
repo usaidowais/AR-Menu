@@ -26,8 +26,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Condition 2: /login or / with active session
-  if (pathname === '/login' || pathname === '/') {
+  // Condition 2: /login with active session → redirect to admin
+  // Note: '/' is the public marketing landing page and should always be accessible
+  if (pathname === '/login') {
     if (hasSession) {
       const adminUrl = request.nextUrl.clone();
       adminUrl.pathname = '/admin/restaurants';
